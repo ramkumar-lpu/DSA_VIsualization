@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Array</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    .box-heading {
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+      -webkit-user-select: none;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #outputConsole {
+      background: #1f2937;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      margin-top: 12px;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    .array-box {
+      min-height: 180px;
+      background: #1f2937;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      overflow-x: auto;
+    }
+    .array-visual {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 60px;
+      margin: 0 auto;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      max-width: 100%;
+    }
+    .array-cell {
+      width: 52px;
+      height: 42px;
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 15px;
+      position: relative;
+      transition: all 0.2s ease;
+      border: 1px solid #6366f1;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+      flex-shrink: 0;
+    }
+    .array-cell.added {
+      background: #10b981;
+      border-color: #34d399;
+      animation: pulse 0.8s ease-out;
+    }
+    .array-cell.removed {
+      background: #ef4444;
+      border-color: #f87171;
+      animation: shrink 0.6s ease-out forwards;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shrink {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    #codeExecution {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #codeExecution::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 3px;
+    }
+    .code-line {
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin: 2px 0;
+    }
+    .code-line.highlight {
+      background-color: rgba(234, 179, 8, 0.15);
+      border-left: 3px solid #eab308;
+    }
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+    <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      DSA Visualizer
+    </h2>
+    <ul class="flex flex-col gap-3">
+      <li>
+        <a href="idx.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-indigo-900/30 text-indigo-300 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          Array
+        </a>
+      </li>
+      <li>
+        <a href="linked.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Linked List
+        </a>
+      </li>
+      <li>
+        <a href="stack.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+          </svg>
+          Stack
+        </a>
+      </li>
+      <li>
+        <a href="queue.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          Queue
+        </a>
+      </li>
+      <li>
+        <a href="tree.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+          Tree
+        </a>
+      </li>
+      <li>
+        <a href="graph.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Graph
+        </a>
+      </li>
+      <li>
+        <a href="heap.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Heap
+        </a>
+      </li>
+      <li>
+        <a href="hashing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          Hashing
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 max-w-5xl mx-auto flex flex-col gap-6">
+    <h1 class="text-3xl font-bold text-indigo-300 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      Array Visualizer
+    </h1>
+    
+    <textarea
+      id="codeInput"
+      rows="8"
+      class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+      placeholder="Write your JS array code here, e.g.
+let arr = [];
+arr.push(10);
+arr.pop();
+arr.unshift(5);
+arr.shift();"
+    ></textarea>
+    
+    <button
+      id="runBtn"
+      class="mt-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition self-start flex items-center gap-2 font-medium shadow-lg hover:shadow-indigo-500/20 active:scale-95"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+      </svg>
+      Run & Visualize
+    </button>
+
+    <div class="flex gap-6 mt-2">
+  <!-- Code Execution Highlight -->
+  <section class="w-1/2 bg-gray-800 p-4 rounded-lg border border-gray-700 font-mono text-large whitespace-pre-wrap overflow-auto h-[220px] flex flex-col">
+    <div class="flex items-center"> <!-- Removed box-heading class and using simple flex -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      <span class="ml-1 text-indigo-300 font-medium">Code Execution</span> <!-- Added ml-1 for minimal spacing -->
+    </div>
+    <div id="codeExecution" class="flex-grow overflow-auto mt-1"></div> <!-- Added small top margin -->
+  </section>
+
+      <!-- Array Visualization -->
+      <div class="w-1/2 flex flex-col">
+        <div class="box-heading">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          Array Visualization
+        </div>
+        <section class="array-box">
+          <div id="arrayContainer" class="array-visual"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Output Console Section -->
+    <section>
+      <div class="box-heading">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Output Console
+      </div>
+      <div id="outputConsole" tabindex="0"></div>
+    </section>
+  </main>
+
+  <script>
+    const runBtn = document.getElementById("runBtn");
+    const codeInput = document.getElementById("codeInput");
+    const codeExecution = document.getElementById("codeExecution");
+    const arrayContainer = document.getElementById("arrayContainer");
+    const outputConsole = document.getElementById("outputConsole");
+
+    function appendOutput(text) {
+      outputConsole.textContent += text + "\n";
+      outputConsole.scrollTop = outputConsole.scrollHeight;
+    }
+
+    function highlightLine(lines, index) {
+      const lineDivs = document.querySelectorAll('#codeExecution .code-line');
+      lineDivs.forEach((div, i) => {
+        if (i === index) {
+          div.classList.add('highlight');
+        } else {
+          div.classList.remove('highlight');
+        }
+      });
+    }
+
+    function renderArray(arr, highlightIdx = null, action = null) {
+      arrayContainer.innerHTML = "";
+      arr.forEach((val, idx) => {
+        const cell = document.createElement("div");
+        cell.className = "array-cell";
+        cell.textContent = val;
+        if (highlightIdx === idx && action === "add") cell.classList.add("added");
+        if (highlightIdx === idx && action === "remove") cell.classList.add("removed");
+        arrayContainer.appendChild(cell);
+      });
+      if (arr.length === 0) {
+        arrayContainer.innerHTML = `<div class="text-gray-400 italic">Array is empty</div>`;
+      }
+    }
+
+    runBtn.addEventListener("click", async () => {
+      const code = codeInput.value.trim();
+      if (!code) return alert("Please enter some code");
+
+      codeExecution.innerHTML = "";
+      arrayContainer.innerHTML = "";
+      outputConsole.textContent = "";
+
+      const lines = code.split("\n").map(line => line.trim()).filter(l => l !== "");
+      let arr = [];
+
+      codeExecution.innerHTML = lines
+        .map((line, i) => `<div id="line-${i}" class="code-line">${line}</div>`)
+        .join("");
+
+      for (let i = 0; i < lines.length; i++) {
+        highlightLine(lines, i);
+        const line = lines[i];
+
+        // Initialize array
+        if (/let\s+arr\s*=\s*\[\s*\];?/.test(line)) {
+          arr = [];
+          renderArray(arr);
+          appendOutput("> Initialized empty array.");
+          await new Promise(res => setTimeout(res, 800));
+          continue;
+        }
+
+        // arr.push(val)
+        let pushMatch = line.match(/arr\.push\((.+)\);?/);
+        if (pushMatch) {
+          try {
+            const val = eval(pushMatch[1]);
+            arr.push(val);
+            renderArray(arr, arr.length - 1, "add");
+            appendOutput(`> Pushed ${val} to array. New length: ${arr.length}`);
+            await new Promise(res => setTimeout(res, 1000));
+          } catch (e) {
+            appendOutput("! Error: Failed to evaluate push value.");
+          }
+          continue;
+        }
+
+        // arr.pop()
+        if (/arr\.pop\(\);?/.test(line)) {
+          if (arr.length > 0) {
+            const removed = arr.pop();
+            renderArray(arr, arr.length, "remove");
+            appendOutput(`> Popped ${removed} from array. New length: ${arr.length}`);
+            await new Promise(res => setTimeout(res, 1000));
+          } else {
+            appendOutput("! Warning: Array is empty. Nothing to pop.");
+            await new Promise(res => setTimeout(res, 800));
+          }
+          continue;
+        }
+
+        // arr.unshift(val)
+        let unshiftMatch = line.match(/arr\.unshift\((.+)\);?/);
+        if (unshiftMatch) {
+          try {
+            const val = eval(unshiftMatch[1]);
+            arr.unshift(val);
+            renderArray(arr, 0, "add");
+            appendOutput(`> Unshifted ${val} to array. New length: ${arr.length}`);
+            await new Promise(res => setTimeout(res, 1000));
+          } catch (e) {
+            appendOutput("! Error: Failed to evaluate unshift value.");
+          }
+          continue;
+        }
+
+        // arr.shift()
+        if (/arr\.shift\(\);?/.test(line)) {
+          if (arr.length > 0) {
+            const removed = arr.shift();
+            renderArray(arr, 0, "remove");
+            appendOutput(`> Shifted ${removed} from array. New length: ${arr.length}`);
+            await new Promise(res => setTimeout(res, 1000));
+          } else {
+            appendOutput("! Warning: Array is empty. Nothing to shift.");
+            await new Promise(res => setTimeout(res, 800));
+          }
+          continue;
+        }
+
+        // Other lines: just wait a bit
+        await new Promise(res => setTimeout(res, 600));
+      }
+      highlightLine(lines, -1);
+    });
+  </script>
+</body>
+</html>

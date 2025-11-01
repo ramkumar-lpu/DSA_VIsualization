@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Graph</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shrink {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    #codeExecution {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #codeExecution::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 3px;
+    }
+    .code-line {
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin: 2px 0;
+    }
+    .code-line.highlight {
+      background-color: rgba(234, 179, 8, 0.15);
+      border-left: 3px solid #eab308;
+    }
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+    }
+    .box-heading {
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #outputConsole {
+      background: #1f2937;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      margin-top: 12px;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    #graphContainer {
+      min-height: 260px;
+      height: 260px;
+      background: #1f2937;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+    #adjContainer {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    #adjList, #adjMatrix {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 185px;
+      height: 185px;
+      flex: 1;
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      text-align: center;
+    }
+    th, td {
+      border: 1px solid #4b5563;
+      padding: 6px;
+      color: #e5e7eb;
+    }
+    th {
+      background-color: #4f46e5;
+      color: white;
+      user-select: none;
+    }
+    pre {
+      color: #e5e7eb;
+      font-family: 'Fira Code', monospace;
+      white-space: pre-wrap;
+    }
+    .node circle {
+      fill: #4f46e5;
+      stroke: #6366f1;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .node text {
+      fill: white;
+      font-weight: 600;
+      pointer-events: none;
+      user-select: none;
+    }
+    .node.visited circle {
+      fill: #10b981;
+      stroke: #34d399;
+    }
+    .link {
+      stroke: #6366f1;
+      stroke-width: 2px;
+      marker-end: url(#arrowhead);
+      transition: all 0.2s ease;
+    }
+    .link.undirected {
+      marker-end: none;
+    }
+    .link.visited {
+      stroke: #f59e0b;
+      stroke-width: 3px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+    <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      DSA Visualizer
+    </h2>
+    <ul class="flex flex-col gap-3">
+      <li>
+        <a href="idx.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          Array
+        </a>
+      </li>
+      <li>
+        <a href="linked.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Linked List
+        </a>
+      </li>
+      <li>
+        <a href="stack.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+          </svg>
+          Stack
+        </a>
+      </li>
+      <li>
+        <a href="queue.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          Queue
+        </a>
+      </li>
+      <li>
+        <a href="tree.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+          Tree
+        </a>
+      </li>
+      <li>
+        <a href="graph.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-indigo-900/30 text-indigo-300 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Graph
+        </a>
+      </li>
+      <li>
+        <a href="heap.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Heap
+        </a>
+      </li>
+      <li>
+        <a href="hashing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          Hashing
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 max-w-7xl mx-auto flex flex-col gap-4">
+    <h1 class="text-3xl font-bold text-indigo-300 flex items-center gap-2 mt-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+      Graph Visualizer
+    </h1>
+    
+    <textarea
+      id="codeInput"
+      rows="8"
+      class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+      placeholder="Write your JS graph code here, e.g.
+let g = new Graph(false); // false=undirected, true=directed
+g.addVertex('A');
+g.addVertex('B');
+g.addEdge('A', 'B');
+g.dfs('A');
+g.hasCycle();
+g.shortestPath('A', 'B');"
+    ></textarea>
+    
+    <button
+      id="runBtn"
+      class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition self-start flex items-center gap-2 font-medium shadow-lg hover:shadow-indigo-500/20 active:scale-95"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l3-2z" clip-rule="evenodd" />
+      </svg>
+      Run & Visualize
+    </button>
+
+    <div class="flex gap-6 mt-2">
+      <!-- Code Execution Highlight -->
+      <section class="w-1/3 bg-gray-800 p-4 rounded-lg border border-gray-700 font-mono text-base whitespace-pre-wrap overflow-auto h-[500px] flex flex-col">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="ml-1 text-indigo-300 font-medium">Code Execution</span>
+        </div>
+        <div id="codeExecution" class="flex-grow overflow-auto mt-1"></div>
+      </section>
+
+      <!-- Graph Visualization -->
+      <div class="w-2/3 flex flex-col">
+        <div class="box-heading">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          Graph Visualization
+        </div>
+        <section id="graphContainer"></section>
+
+        <div id="adjContainer">
+          <div id="adjList"></div>
+          <div id="adjMatrix"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Console Section -->
+    <section>
+      <div class="box-heading">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Output Console
+      </div>
+      <div id="outputConsole" tabindex="0"></div>
+    </section>
+  </main>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    class Graph {
+      constructor(directed = false) {
+        this.directed = directed;
+        this.vertices = new Set();
+        this.adjList = new Map(); // vertex => Set of neighbours
+      }
+
+      addVertex(v) {
+        if (!this.vertices.has(v)) {
+          this.vertices.add(v);
+          this.adjList.set(v, new Set());
+        }
+      }
+
+      removeVertex(v) {
+        if (!this.vertices.has(v)) return;
+        this.vertices.delete(v);
+        this.adjList.delete(v);
+        for (let [vert, neighbors] of this.adjList.entries()) {
+          neighbors.delete(v);
+        }
+      }
+
+      addEdge(u, v) {
+        if (!this.vertices.has(u) || !this.vertices.has(v)) return;
+        this.adjList.get(u).add(v);
+        if (!this.directed) {
+          this.adjList.get(v).add(u);
+        }
+      }
+
+      removeEdge(u, v) {
+        if (!this.vertices.has(u) || !this.vertices.has(v)) return;
+        this.adjList.get(u).delete(v);
+        if (!this.directed) {
+          this.adjList.get(v).delete(u);
+        }
+      }
+
+      getVertices() {
+        return Array.from(this.vertices);
+      }
+
+      getAdjList() {
+        let obj = {};
+        for (let v of this.vertices) {
+          obj[v] = Array.from(this.adjList.get(v));
+        }
+        return obj;
+      }
+
+      getAdjMatrix() {
+        const verts = this.getVertices();
+        const idxMap = {};
+        verts.forEach((v, i) => idxMap[v] = i);
+        let matrix = Array(verts.length).fill(0).map(() => Array(verts.length).fill(0));
+        for (let u of verts) {
+          for (let w of this.adjList.get(u)) {
+            matrix[idxMap[u]][idxMap[w]] = 1;
+          }
+        }
+        return {matrix, verts};
+      }
+
+      async dfs(start, visitCallback) {
+        if (!this.vertices.has(start)) return;
+        let visited = new Set();
+        let stack = [start];
+
+        while (stack.length) {
+          let curr = stack.pop();
+          if (!visited.has(curr)) {
+            visitCallback(curr);
+            visited.add(curr);
+            let neighbors = Array.from(this.adjList.get(curr)).reverse();
+            for (let n of neighbors) {
+              if (!visited.has(n)) stack.push(n);
+            }
+            await delay(1000);
+          }
+        }
+      }
+
+      async bfs(start, visitCallback) {
+        if (!this.vertices.has(start)) return;
+        let visited = new Set();
+        let queue = [start];
+        visited.add(start);
+
+        while (queue.length) {
+          let curr = queue.shift();
+          visitCallback(curr);
+          await delay(1000);
+          for (let n of this.adjList.get(curr)) {
+            if (!visited.has(n)) {
+              visited.add(n);
+              queue.push(n);
+            }
+          }
+        }
+      }
+
+      hasCycleDirected() {
+        if (!this.directed) return false;
+        let visited = new Set();
+        let recStack = new Set();
+
+        const dfs = (v) => {
+          visited.add(v);
+          recStack.add(v);
+
+          for (let n of this.adjList.get(v)) {
+            if (!visited.has(n)) {
+              if (dfs(n)) return true;
+            } else if (recStack.has(n)) {
+              return true;
+            }
+          }
+          recStack.delete(v);
+          return false;
+        };
+
+        for (let v of this.vertices) {
+          if (!visited.has(v)) {
+            if (dfs(v)) return true;
+          }
+        }
+        return false;
+      }
+
+      hasCycleUndirected() {
+        if (this.directed) return false;
+        let visited = new Set();
+
+        const dfs = (v, parent) => {
+          visited.add(v);
+          for (let n of this.adjList.get(v)) {
+            if (!visited.has(n)) {
+              if (dfs(n, v)) return true;
+            } else if (n !== parent) {
+              return true;
+            }
+          }
+          return false;
+        };
+
+        for (let v of this.vertices) {
+          if (!visited.has(v)) {
+            if (dfs(v, null)) return true;
+          }
+        }
+        return false;
+      }
+
+      hasCycle() {
+        return this.directed ? this.hasCycleDirected() : this.hasCycleUndirected();
+      }
+
+      isConnected() {
+        if (this.vertices.size === 0) return true;
+        if (this.directed) {
+          const verts = this.getVertices();
+          let visited = new Set();
+          let queue = [verts[0]];
+          visited.add(verts[0]);
+          while (queue.length) {
+            let u = queue.shift();
+            for (let v of this.adjList.get(u)) {
+              if (!visited.has(v)) {
+                visited.add(v);
+                queue.push(v);
+              }
+            }
+          }
+          return visited.size === this.vertices.size;
+        } else {
+          const verts = this.getVertices();
+          let visited = new Set();
+          let stack = [verts[0]];
+          visited.add(verts[0]);
+          while (stack.length) {
+            let u = stack.pop();
+            for (let v of this.adjList.get(u)) {
+              if (!visited.has(v)) {
+                visited.add(v);
+                stack.push(v);
+              }
+            }
+          }
+          return visited.size === this.vertices.size;
+        }
+      }
+
+      shortestPath(start, end) {
+        if (!this.vertices.has(start) || !this.vertices.has(end)) return null;
+        let visited = new Set();
+        let queue = [start];
+        let parent = {};
+        visited.add(start);
+
+        while (queue.length) {
+          let curr = queue.shift();
+          if (curr === end) {
+            let path = [];
+            while (curr !== undefined) {
+              path.push(curr);
+              curr = parent[curr];
+            }
+            return path.reverse();
+          }
+          for (let n of this.adjList.get(curr)) {
+            if (!visited.has(n)) {
+              visited.add(n);
+              parent[n] = curr;
+              queue.push(n);
+            }
+          }
+        }
+        return null;
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const svgWidth = 600;
+    const svgHeight = 320;
+    const graphContainer = d3.select("#graphContainer");
+    graphContainer.html("");
+    const svg = graphContainer.append("svg")
+      .attr("width", svgWidth)
+      .attr("height", svgHeight);
+
+    svg.append("defs").append("marker")
+      .attr("id", "arrowhead")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 25)
+      .attr("refY", 0)
+      .attr("markerWidth", 7)
+      .attr("markerHeight", 7)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M0,-5L10,0L0,5")
+      .attr("fill", "#6366f1");
+
+    function renderGraph(g, visitedNodes = [], highlightEdges = []) {
+      svg.selectAll("*:not(defs)").remove();
+
+      const nodes = g.getVertices().map(v => ({id: v}));
+      let links = [];
+      for (let u of g.vertices) {
+        for (let w of g.adjList.get(u)) {
+          links.push({source: u, target: w});
+        }
+      }
+
+      const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(1))
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("center", d3.forceCenter(svgWidth / 2, svgHeight / 2))
+        .stop();
+
+      simulation.tick(100);
+
+      const link = svg.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("class", d => "link " + (g.directed ? "" : "undirected"))
+        .classed("visited", d => {
+          return highlightEdges.some(e => e[0] === d.source.id && e[1] === d.target.id);
+        })
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      const node = svg.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .attr("class", "node")
+        .classed("visited", d => visitedNodes.includes(d.id))
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+
+      node.append("circle")
+        .attr("r", 18);
+
+      node.append("text")
+        .text(d => d.id)
+        .attr("dy", "0.35em")
+        .attr("text-anchor", "middle");
+
+      return {simulation, nodes, links};
+    }
+
+    function renderAdjList(g) {
+      const adjListDiv = document.getElementById("adjList");
+      let html = `<h3 class="font-semibold mb-2 text-indigo-300">Adjacency List</h3><pre>${JSON.stringify(g.getAdjList(), null, 2)}</pre>`;
+      adjListDiv.innerHTML = html;
+    }
+
+    function renderAdjMatrix(g) {
+      const adjMatrixDiv = document.getElementById("adjMatrix");
+      const {matrix, verts} = g.getAdjMatrix();
+
+      if (verts.length === 0) {
+        adjMatrixDiv.innerHTML = `<h3 class="font-semibold mb-2 text-indigo-300">Adjacency Matrix</h3><div class="italic text-gray-400">Graph is empty</div>`;
+        return;
+      }
+
+      let html = `<h3 class="font-semibold mb-2 text-indigo-300">Adjacency Matrix</h3>`;
+      html += `<table><thead><tr><th class="bg-gray-700"></th>${verts.map(v => `<th>${v}</th>`).join("")}</tr></thead><tbody>`;
+
+      for (let i = 0; i < verts.length; i++) {
+        html += `<tr><th class="bg-gray-700">${verts[i]}</th>`;
+        for (let j = 0; j < verts.length; j++) {
+          html += `<td>${matrix[i][j]}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      adjMatrixDiv.innerHTML = html;
+    }
+
+    function highlightLine(lines, index) {
+      lines.forEach((_, i) => {
+        const lineDiv = document.getElementById(`line-${i}`);
+        if (!lineDiv) return;
+        if (i === index) lineDiv.classList.add("highlight");
+        else lineDiv.classList.remove("highlight");
+      });
+    }
+
+    function appendOutput(text) {
+      const outputConsole = document.getElementById("outputConsole");
+      outputConsole.textContent += text + "\n";
+      outputConsole.scrollTop = outputConsole.scrollHeight;
+    }
+
+    async function executeCode(lines) {
+      let g = null;
+      codeExecution.innerHTML = "";
+      document.getElementById("outputConsole").textContent = "";
+      renderAdjList({getAdjList: () => ({}), vertices: new Set(), adjList: new Map()});
+      renderAdjMatrix({getAdjMatrix: () => ({matrix: [], verts: []})});
+      renderGraph(new Graph());
+
+      codeExecution.innerHTML = lines.map((l,i) => `<div id="line-${i}" class="code-line">${l}</div>`).join("");
+
+      for (let i = 0; i < lines.length; i++) {
+        highlightLine(lines, i);
+        let line = lines[i].trim();
+
+        if (/let\s+g\s*=\s*new\s*Graph\((true|false)\);?/.test(line)) {
+          const directed = line.includes("true");
+          g = new Graph(directed);
+          renderGraph(g);
+          renderAdjList(g);
+          renderAdjMatrix(g);
+          appendOutput(`Created ${directed ? "directed" : "undirected"} graph.`);
+          await delay(1000);
+        } 
+        else if (/g\.addVertex\(['"](.+)['"]\);?/.test(line)) {
+          const v = line.match(/g\.addVertex\(['"](.+)['"]\);?/)[1];
+          if (!g) { appendOutput("Error: Graph not created yet! Use 'let g = new Graph(true/false);'"); break;}
+          g.addVertex(v);
+          renderGraph(g);
+          renderAdjList(g);
+          renderAdjMatrix(g);
+          appendOutput(`Added vertex '${v}'.`);
+          await delay(700);
+        }
+        else if (/g\.removeVertex\(['"](.+)['"]\);?/.test(line)) {
+          const v = line.match(/g\.removeVertex\(['"](.+)['"]\);?/)[1];
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          g.removeVertex(v);
+          renderGraph(g);
+          renderAdjList(g);
+          renderAdjMatrix(g);
+          appendOutput(`Removed vertex '${v}'.`);
+          await delay(700);
+        }
+        else if (/g\.addEdge\(['"](.+)['"],\s*['"](.+)['"]\);?/.test(line)) {
+          const [_, u, v] = line.match(/g\.addEdge\(['"](.+)['"],\s*['"](.+)['"]\);?/);
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          g.addEdge(u, v);
+          renderGraph(g);
+          renderAdjList(g);
+          renderAdjMatrix(g);
+          appendOutput(`Added edge from '${u}' to '${v}'.`);
+          await delay(700);
+        }
+        else if (/g\.removeEdge\(['"](.+)['"],\s*['"](.+)['"]\);?/.test(line)) {
+          const [_, u, v] = line.match(/g\.removeEdge\(['"](.+)['"],\s*['"](.+)['"]\);?/);
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          g.removeEdge(u, v);
+          renderGraph(g);
+          renderAdjList(g);
+          renderAdjMatrix(g);
+          appendOutput(`Removed edge from '${u}' to '${v}'.`);
+          await delay(700);
+        }
+        else if (/g\.dfs\(['"](.+)['"]\);?/.test(line)) {
+          const start = line.match(/g\.dfs\(['"](.+)['"]\);?/)[1];
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          let visitedOrder = [];
+          await g.dfs(start, (node) => {
+            visitedOrder.push(node);
+            renderGraph(g, visitedOrder);
+          });
+          appendOutput("DFS traversal order: " + visitedOrder.join(" → "));
+          await delay(500);
+        }
+        else if (/g\.bfs\(['"](.+)['"]\);?/.test(line)) {
+          const start = line.match(/g\.bfs\(['"](.+)['"]\);?/)[1];
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          let visitedOrder = [];
+          await g.bfs(start, (node) => {
+            visitedOrder.push(node);
+            renderGraph(g, visitedOrder);
+          });
+          appendOutput("BFS traversal order: " + visitedOrder.join(" → "));
+          await delay(500);
+        }
+        else if (/g\.hasCycle\(\);?/.test(line)) {
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          let hasCycle = g.hasCycle();
+          appendOutput("Graph has cycle? " + (hasCycle ? "Yes" : "No"));
+          await delay(500);
+        }
+        else if (/g\.isConnected\(\);?/.test(line)) {
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          let connected = g.isConnected();
+          appendOutput("Graph is connected? " + (connected ? "Yes" : "No"));
+          await delay(500);
+        }
+        else if (/g\.shortestPath\(['"](.+)['"],\s*['"](.+)['"]\);?/.test(line)) {
+          const [_, start, end] = line.match(/g\.shortestPath\(['"](.+)['"],\s*['"](.+)['"]\);?/);
+          if (!g) { appendOutput("Error: Graph not created yet!"); break;}
+          const path = g.shortestPath(start, end);
+          if (!path) {
+            appendOutput(`No path found between ${start} and ${end}`);
+          } else {
+            appendOutput(`Shortest path from ${start} to ${end}: ${path.join(" → ")}`);
+          }
+          await delay(700);
+        }
+        else {
+          // unknown or empty line
+          await delay(500);
+        }
+      }
+      highlightLine(lines, -1);
+    }
+
+    const runBtn = document.getElementById("runBtn");
+    const codeInput = document.getElementById("codeInput");
+    const codeExecution = document.getElementById("codeExecution");
+
+    runBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim();
+      if (!code) return alert("Please enter some code");
+      const lines = code.split("\n").map(l => l.trim()).filter(l => l !== "");
+      executeCode(lines);
+    });
+  </script>
+</body>
+</html>

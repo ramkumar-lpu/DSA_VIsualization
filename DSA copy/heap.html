@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Heap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shrink {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    #codeExecution {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #codeExecution::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 3px;
+    }
+    .code-line {
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin: 2px 0;
+    }
+    .code-line.highlight {
+      background-color: rgba(234, 179, 8, 0.15);
+      border-left: 3px solid #eab308;
+    }
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+    }
+    .box-heading {
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #outputConsole {
+      background: #1f2937;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      margin-top: 12px;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    #heapContainer {
+      min-height: 360px;
+      height: 360px;
+      background: #1f2937;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+    .heap-array {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .heap-array .heap-node {
+      width: 40px;
+      height: 40px;
+      font-size: 13px;
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      position: relative;
+      transition: all 0.2s ease;
+      border: 1px solid #6366f1;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+    .heap-array .heap-node.added {
+      background: #10b981;
+      border-color: #34d399;
+      animation: pulse 0.8s ease-out;
+    }
+    .heap-array .heap-node.removed {
+      background: #ef4444;
+      border-color: #f87171;
+      animation: shrink 0.6s ease-out forwards;
+    }
+    .heap-tree {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      min-height: 168px;
+      height: 168px;
+    }
+    .tree-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      min-width: 50px;
+      min-height: 60px;
+      margin: 0 12px;
+    }
+    .node-box {
+      width: 40px;
+      height: 40px;
+      background: #4f46e5;
+      border-radius: 6px;
+      color: white;
+      font-weight: 600;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      position: relative;
+      z-index: 2;
+      transition: all 0.2s ease;
+      border: 1px solid #6366f1;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+    .node-box.added {
+      background: #10b981;
+      border-color: #34d399;
+      animation: pulse 0.8s ease-out;
+    }
+    .node-box.removed {
+      background: #ef4444;
+      border-color: #f87171;
+      animation: shrink 0.6s ease-out forwards;
+    }
+    .node-box.visited {
+      background: #10b981;
+      border-color: #34d399;
+    }
+    .line-down {
+      width: 2px;
+      height: 20px;
+      background: #6366f1;
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    .node-children {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+      gap: 20px;
+    }
+    #heapOutput {
+      color: #a5b4fc;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+    <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      DSA Visualizer
+    </h2>
+    <ul class="flex flex-col gap-3">
+      <li>
+        <a href="idx.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          Array
+        </a>
+      </li>
+      <li>
+        <a href="linked.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Linked List
+        </a>
+      </li>
+      <li>
+        <a href="stack.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+          </svg>
+          Stack
+        </a>
+      </li>
+      <li>
+        <a href="queue.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          Queue
+        </a>
+      </li>
+      <li>
+        <a href="tree.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+          Tree
+        </a>
+      </li>
+      <li>
+        <a href="graph.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Graph
+        </a>
+      </li>
+      <li>
+        <a href="heap.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-indigo-900/30 text-indigo-300 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Heap
+        </a>
+      </li>
+      <li>
+        <a href="hashing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          Hashing
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 max-w-7xl mx-auto flex flex-col gap-4">
+    <h1 class="text-3xl font-bold text-indigo-300 flex items-center gap-2 mt-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      Heap Visualizer - Max/Min Heap
+    </h1>
+    
+    <textarea
+      id="codeInput"
+      rows="8"
+      class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+      placeholder="Write your JS heap code here, e.g.
+let heap = new Heap('max');
+heap.insert(10);
+heap.insert(5);
+heap.insert(15);
+heap.extract();
+heap.peek();
+heap.build([3,1,7,8,2]);
+heap.size();"
+    ></textarea>
+    
+    <button
+      id="runBtn"
+      class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition self-start flex items-center gap-2 font-medium shadow-lg hover:shadow-indigo-500/20 active:scale-95"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l3-2z" clip-rule="evenodd" />
+      </svg>
+      Run & Visualize
+    </button>
+
+    <div class="flex gap-6 mt-2">
+      <!-- Code Execution Highlight -->
+      <section class="w-1/2 bg-gray-800 p-4 rounded-lg border border-gray-700 font-mono text-base whitespace-pre-wrap overflow-auto h-[360px] flex flex-col">
+        <div class="flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span class="ml-1 text-indigo-300 font-medium">Code Execution</span>
+        </div>
+        <div id="codeExecution" class="flex-grow overflow-auto mt-1"></div>
+      </section>
+
+      <!-- Heap Visualization -->
+      <div class="w-1/2 flex flex-col gap-4">
+        <!-- Heap Array Box -->
+        <section class="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col items-center">
+          <div class="box-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Heap Array
+          </div>
+          <div class="heap-array w-full h-full overflow-auto" id="heapArray"></div>
+        </section>
+        
+        <!-- Heap Tree Box -->
+        <section class="bg-gray-800 p-4 rounded-lg border border-gray-700 flex flex-col items-center">
+          <div class="box-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+            </svg>
+            Heap Tree
+          </div>
+          <div class="heap-tree w-full h-full overflow-auto" id="heapTree"></div>
+          <div id="heapOutput" class="mt-2 text-indigo-300 font-medium text-center"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Output Console Section -->
+    <section>
+      <div class="box-heading">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Output Console
+      </div>
+      <div id="outputConsole" tabindex="0"></div>
+    </section>
+  </main>
+
+  <script>
+    class Heap {
+      constructor(type = 'max') {
+        this.type = type;
+        this.data = [];
+      }
+
+      size() {
+        return this.data.length;
+      }
+
+      peek() {
+        return this.data.length ? this.data[0] : null;
+      }
+
+      swap(i, j) {
+        [this.data[i], this.data[j]] = [this.data[j], this.data[i]];
+      }
+
+      compare(i, j) {
+        if (this.type === 'max') return this.data[i] > this.data[j];
+        else return this.data[i] < this.data[j];
+      }
+
+      heapifyUp(idx) {
+        while (idx > 0) {
+          let parent = Math.floor((idx - 1) / 2);
+          if (this.compare(idx, parent)) {
+            this.swap(idx, parent);
+            idx = parent;
+          } else break;
+        }
+      }
+
+      heapifyDown(idx) {
+        const n = this.data.length;
+        while (true) {
+          let left = 2 * idx + 1;
+          let right = 2 * idx + 2;
+          let swapIdx = idx;
+
+          if (left < n && this.compare(left, swapIdx)) swapIdx = left;
+          if (right < n && this.compare(right, swapIdx)) swapIdx = right;
+
+          if (swapIdx !== idx) {
+            this.swap(idx, swapIdx);
+            idx = swapIdx;
+          } else break;
+        }
+      }
+
+      insert(val) {
+        this.data.push(val);
+        this.heapifyUp(this.data.length - 1);
+      }
+
+      extract() {
+        if (this.data.length === 0) return null;
+        if (this.data.length === 1) return this.data.pop();
+
+        const root = this.data[0];
+        this.data[0] = this.data.pop();
+        this.heapifyDown(0);
+        return root;
+      }
+
+      build(arr) {
+        this.data = [...arr];
+        for (let i = Math.floor(this.data.length / 2) - 1; i >= 0; i--) {
+          this.heapifyDown(i);
+        }
+      }
+    }
+
+    const runBtn = document.getElementById("runBtn");
+    const codeInput = document.getElementById("codeInput");
+    const codeExecution = document.getElementById("codeExecution");
+    const heapArray = document.getElementById("heapArray");
+    const heapTree = document.getElementById("heapTree");
+    const heapOutput = document.getElementById("heapOutput");
+    const outputConsole = document.getElementById("outputConsole");
+
+    function renderHeapArray(heap, highlightIdx = null, action = null) {
+      heapArray.innerHTML = "";
+      heap.data.forEach((val, i) => {
+        const node = document.createElement("div");
+        node.className = "heap-node";
+        if (highlightIdx === i && action === "add") node.classList.add("added");
+        if (highlightIdx === i && action === "remove") node.classList.add("removed");
+        node.textContent = val;
+        heapArray.appendChild(node);
+      });
+      if (heap.data.length === 0) {
+        heapArray.innerHTML = `<div class="text-gray-400 italic">Heap is empty</div>`;
+      }
+    }
+
+    function renderHeapTree(heap, highlightIdx = null, action = null) {
+      heapTree.innerHTML = "";
+      if (heap.data.length === 0) {
+        heapTree.innerHTML = `<div class="text-gray-400 italic">Heap is empty</div>`;
+        return;
+      }
+
+      function buildTreeNode(i, depth = 0) {
+        if (i >= heap.data.length) return null;
+        const nodeDiv = document.createElement("div");
+        nodeDiv.classList.add("tree-node");
+        nodeDiv.style.marginTop = depth === 0 ? "0" : "24px";
+        
+        const box = document.createElement("div");
+        box.className = "node-box";
+        if (highlightIdx === i && action === "add") box.classList.add("added");
+        if (highlightIdx === i && action === "remove") box.classList.add("removed");
+        if (highlightIdx === i) box.classList.add("visited");
+        box.textContent = heap.data[i];
+        nodeDiv.appendChild(box);
+
+        const leftIdx = 2 * i + 1;
+        const rightIdx = 2 * i + 2;
+        if (leftIdx < heap.data.length || rightIdx < heap.data.length) {
+          const childrenDiv = document.createElement("div");
+          childrenDiv.classList.add("node-children");
+          childrenDiv.style.gap = "40px";
+          childrenDiv.style.marginTop = "24px";
+
+          if (leftIdx < heap.data.length) {
+            childrenDiv.appendChild(buildTreeNode(leftIdx, depth + 1));
+          } else {
+            const empty = document.createElement("div");
+            empty.style.minWidth = "50px";
+            childrenDiv.appendChild(empty);
+          }
+
+          if (rightIdx < heap.data.length) {
+            childrenDiv.appendChild(buildTreeNode(rightIdx, depth + 1));
+          } else {
+            const empty = document.createElement("div");
+            empty.style.minWidth = "50px";
+            childrenDiv.appendChild(empty);
+          }
+
+          nodeDiv.appendChild(childrenDiv);
+        }
+
+        return nodeDiv;
+      }
+
+      const rootNode = buildTreeNode(0);
+      heapTree.appendChild(rootNode);
+    }
+
+    function highlightLine(lines, index) {
+      lines.forEach((_, i) => {
+        const lineDiv = document.getElementById(`line-${i}`);
+        if (!lineDiv) return;
+        if (i === index) lineDiv.classList.add("highlight");
+        else lineDiv.classList.remove("highlight");
+      });
+    }
+
+    function printHeapOutput(msg) {
+      heapOutput.textContent = msg;
+    }
+
+    function appendOutput(text) {
+      outputConsole.textContent += text + "\n";
+      outputConsole.scrollTop = outputConsole.scrollHeight;
+    }
+
+    async function executeCode(lines) {
+      let heap = null;
+      codeExecution.innerHTML = "";
+      heapArray.innerHTML = "";
+      heapTree.innerHTML = "";
+      printHeapOutput("");
+      outputConsole.textContent = "";
+
+      codeExecution.innerHTML = lines.map((l,i) => `<div id="line-${i}" class="code-line">${l}</div>`).join("");
+
+      for (let i = 0; i < lines.length; i++) {
+        highlightLine(lines, i);
+        let line = lines[i].trim();
+
+        if (/let\s+heap\s*=\s*new\s*Heap\(['"]?(max|min)['"]?\);?/.test(line)) {
+          const m = line.match(/let\s+heap\s*=\s*new\s*Heap\(['"]?(max|min)['"]?\);?/);
+          const type = m[1];
+          heap = new Heap(type);
+          renderHeapArray(heap);
+          renderHeapTree(heap);
+          printHeapOutput(`Created a ${type === "max" ? "Max" : "Min"} Heap.`);
+          appendOutput(`Created a ${type === "max" ? "Max" : "Min"} Heap.`);
+          await delay(1000);
+        } else if (/heap\.insert\((\d+)\);?/.test(line)) {
+          const val = parseInt(line.match(/heap\.insert\((\d+)\);?/)[1]);
+          heap.insert(val);
+          renderHeapArray(heap, heap.data.length - 1, "add");
+          renderHeapTree(heap, heap.data.length - 1, "add");
+          printHeapOutput(`Inserted ${val} into heap.`);
+          appendOutput(`Inserted ${val} into heap.`);
+          await delay(1200);
+        } else if (/heap\.extract\(\);?/.test(line)) {
+          const extracted = heap.extract();
+          renderHeapArray(heap, 0, "remove");
+          renderHeapTree(heap, 0, "remove");
+          printHeapOutput(`Extracted root value: ${extracted !== null ? extracted : "Heap is empty"}`);
+          appendOutput(`Extracted root value: ${extracted !== null ? extracted : "Heap is empty"}`);
+          await delay(1200);
+        } else if (/heap\.peek\(\);?/.test(line)) {
+          const peeked = heap.peek();
+          printHeapOutput(`Peek root value: ${peeked !== null ? peeked : 'Heap is empty'}`);
+          appendOutput(`Peek root value: ${peeked !== null ? peeked : 'Heap is empty'}`);
+          await delay(1000);
+        } else if (/heap\.build\(\[(.*?)\]\);?/.test(line)) {
+          const arrStr = line.match(/heap\.build\(\[(.*?)\]\);?/)[1];
+          const arr = arrStr.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+          heap.build(arr);
+          renderHeapArray(heap);
+          renderHeapTree(heap);
+          printHeapOutput(`Built heap from array: [${arr.join(", ")}]`);
+          appendOutput(`Built heap from array: [${arr.join(", ")}]`);
+          await delay(1200);
+        } else if (/heap\.size\(\);?/.test(line)) {
+          printHeapOutput(`Heap size: ${heap.size()}`);
+          appendOutput(`Heap size: ${heap.size()}`);
+          await delay(1000);
+        } else {
+          printHeapOutput("");
+          await delay(800);
+        }
+      }
+      highlightLine(lines, -1);
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    runBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim();
+      if (!code) return alert("Please enter some code");
+      const lines = code.split("\n").map(l => l.trim()).filter(l => l !== "");
+      executeCode(lines);
+    });
+  </script>
+</body>
+</html>
