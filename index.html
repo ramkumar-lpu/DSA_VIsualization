@@ -1,0 +1,263 @@
+<!DOCTYPE html><!doctype html>
+
+<html lang="en"><html>
+
+<head>  <head>
+
+  <meta charset="UTF-8" />    <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />    <meta http-equiv="refresh" content="0; URL='DSA%20copy/queue.html'">
+
+  <title>DSA Visualizer - Get Started</title>    <title>Redirecting…</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>  </head>
+
+  <style>  <body>
+
+    html, body {    <p>Redirecting to the visualizer — <a href="DSA%20copy/landing.html">click here</a>.</p>
+
+      height: 100%;  </body>
+
+      min-height: 100vh;</html>
+
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      /* Allow scrolling if needed */
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    body {
+      background: #181a2a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      width: 100vw;
+      position: relative;
+      /* Remove overflow: hidden here */
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 0;
+    }
+    /* Animated gradient blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.38;
+      z-index: 0;
+      animation: blobMove 16s infinite alternate cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .blob1 {
+      width: 420px; height: 420px;
+      background: #6366f1;
+      top: -80px; left: -120px;
+      animation-delay: 0s;
+    }
+    .blob2 {
+      width: 340px; height: 340px;
+      background: #a5b4fc;
+      bottom: -80px; right: -100px;
+      animation-delay: 2s;
+    }
+    .blob3 {
+      width: 260px; height: 260px;
+      background: #4338ca;
+      top: 60%; left: 60%;
+      animation-delay: 4s;
+    }
+    @keyframes blobMove {
+      0% { transform: scale(1) translate(0,0);} 
+      50% { transform: scale(1.15) translate(40px, 30px);} 
+      100% { transform: scale(1) translate(-20px, -30px);} 
+    }
+    #visualizerList {
+      max-width: 900px;
+      margin-top: 2.5rem;
+      display: none;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeIn 1s;
+      z-index: 2;
+    }
+    .visualizer-card {
+      background: rgba(30,41,59,0.97);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(79, 70, 229, 0.18);
+      width: 200px;
+      height: 140px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s, background 0.3s;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .visualizer-card:hover {
+      transform: translateY(-10px) scale(1.05) rotate(-2deg);
+      box-shadow: 0 16px 40px 0 rgba(79, 70, 229, 0.25);
+      border-color: #6366f1;
+      background: linear-gradient(120deg, #232946 70%, #6366f1 100%);
+    }
+    .visualizer-card h3 {
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #a5b4fc;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px #6366f1cc;
+      z-index: 1;
+    }
+    .visualizer-card p {
+      font-size: 1rem;
+      color: #c7d2fe;
+      text-align: center;
+      padding: 0 0.5rem;
+      font-weight: 500;
+      z-index: 1;
+    }
+    .visualizer-card::before {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #6366f1 60%, #a5b4fc 100%);
+      opacity: 0.10;
+      border-radius: 50%;
+      z-index: 0;
+      transition: opacity 0.3s;
+    }
+    .visualizer-card:hover::before {
+      opacity: 0.22;
+    }
+    #getStartedBtn {
+      background: linear-gradient(90deg, #6366f1 60%, #a5b4fc 100%);
+      color: white;
+      padding: 1rem 3rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 1.3rem;
+      transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+      box-shadow: 0 0 18px #6366f1aa;
+      border: none;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+      z-index: 2;
+      position: relative;
+      animation: pulseGlow 1.5s infinite alternate;
+    }
+    #getStartedBtn:hover {
+      background: linear-gradient(90deg, #4338ca 60%, #6366f1 100%);
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 0 0 32px #6366f1cc, 0 0 0 #fff;
+      animation: none;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 18px #6366f1aa, 0 0 0 #fff; }
+      100% { box-shadow: 0 0 32px #6366f1cc, 0 0 18px #fff3; }
+    }
+    .brand-glow {
+      text-shadow: 0 4px 24px #6366f1cc, 0 1px 0 #fff;
+      background: linear-gradient(90deg, #a5b4fc 60%, #6366f1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: #fff;
+      animation: brandPop 1.2s cubic-bezier(.4,2,.6,1);
+    }
+    @keyframes brandPop {
+      0% { opacity: 0; transform: scale(0.8) translateY(30px);} 
+      80% { opacity: 1; transform: scale(1.08) translateY(-8px);} 
+      100% { opacity: 1; transform: scale(1) translateY(0);} 
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px);} 
+      to { opacity: 1; transform: none;} 
+    }
+    @media (max-width: 700px) {
+      #visualizerList { gap: 1rem; }
+      .visualizer-card { width: 95vw; max-width: 320px; height: 110px; }
+      .blob1, .blob2, .blob3 { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated gradient blobs for background -->
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+
+n  <div class="flex flex-col items-center max-w-2xl text-center w-full z-10 mx-auto" style="position:relative; margin-top:3vh;">
+    <h1 class="text-5xl font-extrabold brand-glow mb-4 mt-20 drop-shadow">Welcome to the DSA Visualizer</h1>
+    <p class="text-gray-100 mb-8  max-w-lg text-lg font-medium drop-shadow">
+      Explore interactive, animated visualizations of popular data structures and algorithms.<br>
+      Strengthen your concepts and prepare for coding interviews in a fun way!
+    </p>
+    <button id="getStartedBtn">✨ Get Started</button>
+
+    <div id="visualizerList" class="flex flex-wrap justify-center items-center w-full" style="margin-bottom:3vh;">
+      <div class="visualizer-card" onclick="navigateTo('idx.html')">
+        <h3>Array</h3>
+        <p>Visualize array operations and algorithms</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('linked.html')">
+        <h3>Linked List</h3>
+        <p>Explore singly, doubly & circular lists</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('stack.html')">
+        <h3>Stack</h3>
+        <p>Understand stack operations visually</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('queue.html')">
+        <h3>Queue</h3>
+        <p>Queue, Deque & Priority Queue in action</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('tree.html')">
+        <h3>Tree</h3>
+        <p>Traverse and manipulate binary trees</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('graph.html')">
+        <h3>Graph</h3>
+        <p>Directed & undirected graph algorithms</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('heap.html')">
+        <h3>Heap</h3>
+        <p>Max & Min heap interactive visualizer</p>
+      </div>
+      <div class="visualizer-card" onclick="navigateTo('hashing.html')">
+        <h3>Hashing</h3>
+        <p>Hash tables and collision resolution</p>
+      </div>
+    </div>
+  </div>
+
+n<script>
+  const getStartedBtn = document.getElementById("getStartedBtn");
+  const visualizerList = document.getElementById("visualizerList");
+
+n  getStartedBtn.addEventListener("click", () => {
+    getStartedBtn.style.display = "none";
+    visualizerList.style.display = "flex";
+    visualizerList.style.animation = "fadeIn 0.8s";
+  });
+
+n  function navigateTo(page) {
+    window.location.href = page;
+  }
+</script>
+
+n</body>
+</html>

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>DSA Visualizer - Tree</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<style>
+		@keyframes pulse {
+			0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+			70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+			100% { transform: scale(1); }
+		}
+		@keyframes shrink {
+			0% { transform: scale(1); opacity: 1; }
+			100% { transform: scale(0); opacity: 0; }
+		}
+		#codeExecution {
+			scrollbar-width: thin;
+			scrollbar-color: #4b5563 #1f2937;
+		}
+		#codeExecution::-webkit-scrollbar {
+			width: 6px;
+			height: 6px;
+		}
+		#codeExecution::-webkit-scrollbar-track {
+			background: #1f2937;
+		}
+		#codeExecution::-webkit-scrollbar-thumb {
+			background-color: #4b5563;
+			border-radius: 3px;
+		}
+		.code-line {
+			padding: 4px 8px;
+			border-radius: 4px;
+			transition: background-color 0.2s;
+			margin: 2px 0;
+		}
+		.code-line.highlight {
+			background-color: rgba(234, 179, 8, 0.15);
+			border-left: 3px solid #eab308;
+		}
+		textarea {
+			scrollbar-width: thin;
+			scrollbar-color: #4b5563 #1f2937;
+		}
+		textarea::-webkit-scrollbar {
+			width: 8px;
+		}
+		textarea::-webkit-scrollbar-track {
+			background: #1f2937;
+		}
+		textarea::-webkit-scrollbar-thumb {
+			background-color: #4b5563;
+			border-radius: 4px;
+		}
+		.box-heading {
+			font-weight: 600;
+			font-size: 1.15rem;
+			color: #a5b4fc;
+			margin-bottom: 10px;
+			user-select: none;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+		#outputConsole {
+			background: #1f2937;
+			padding: 14px;
+			border-radius: 8px;
+			border: 1px solid #374151;
+			font-family: 'Fira Code', monospace;
+			font-size: 14px;
+			min-height: 80px;
+			white-space: pre-wrap;
+			overflow-y: auto;
+			margin-top: 12px;
+			color: #e5e7eb;
+			line-height: 1.5;
+		}
+		#treeContainer {
+			min-height: 460px;
+			height: 460px;
+			background: #1f2937;
+			border-radius: 8px;
+			border: 1px solid #374151;
+			padding: 18px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			overflow: auto;
+		}
+		/* Tree node container (vertical stack) */
+		.tree-node {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			position: relative;
+			min-width: 70px;
+			min-height: 80px;
+			user-select: none;
+		}
+		/* Node box (square) */
+		.node-box {
+			width: 50px;
+			height: 50px;
+			background: #4f46e5;
+			border: 2px solid #6366f1;
+			border-radius: 6px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			font-weight: 600;
+			color: white;
+			cursor: default;
+			transition: all 0.2s ease;
+			position: relative;
+			z-index: 2;
+			box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+		}
+		.node-box.visited {
+			background: #10b981;
+			border-color: #34d399;
+			animation: pulse 0.8s ease-out;
+		}
+		.node-box.found {
+			background: #10b981;
+			border-color: #34d399;
+		}
+		.node-box.lca {
+			background: #f59e0b;
+			border-color: #fbbf24;
+		}
+		.node-children {
+			display: flex;
+			justify-content: center;
+			margin-top: 15px;
+			gap: 50px;
+		}
+		.line-down {
+			width: 2px;
+			height: 25px;
+			background: #6366f1;
+			position: absolute;
+			top: 50px;
+			left: 50%;
+			transform: translateX(-50%);
+			z-index: 1;
+		}
+		.line-horizontal {
+			position: absolute;
+			top: 75px;
+			height: 2px;
+			background: #6366f1;
+			z-index: 1;
+		}
+		.line-left {
+			left: 0;
+			width: 50%;
+		}
+		.line-right {
+			right: 0;
+			width: 50%;
+		}
+		#treeOutput {
+			color: #a5b4fc;
+			font-weight: 600;
+			margin-top: 16px;
+		}
+		#treeTraversal {
+			color: #a5b4fc;
+			font-family: 'Fira Code', monospace;
+			margin-top: 8px;
+		}
+	</style>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+	<!-- Sidebar -->
+	<nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+		<h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+			</svg>
+			DSA Visualizer
+		</h2>
+		<ul class="flex flex-col gap-3">
+			<li>
+				<a href="idx.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+					</svg>
+					Array
+				</a>
+			</li>
+			<li>
+				<a href="linked.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+					</svg>
+					Linked List
+				</a>
+			</li>
+			<li>
+				<a href="stack.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+					</svg>
+					Stack
+				</a>
+			</li>
+			<li>
+				<a href="queue.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+					</svg>
+					Queue
+				</a>
+			</li>
+			<li>
+				<a href="tree.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-indigo-900/30 text-indigo-300 font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+					</svg>
+					Tree
+				</a>
+			</li>
+			<li>
+				<a href="graph.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+					</svg>
+					Graph
+				</a>
+			</li>
+			<li>
+				<a href="heap.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+					</svg>
+					Heap
+				</a>
+			</li>
+			<li>
+				<a href="hashing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+					</svg>
+					Hashing
+				</a>
+			</li>
+		</ul>
+	</nav>
+
+	<!-- Main Content -->
+	<main class="flex-1 p-6 max-w-5xl mx-auto flex flex-col gap-4">
+		<h1 class="text-3xl font-bold text-indigo-300 flex items-center gap-2 mt-2">
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+			</svg>
+			Tree Visualizer
+		</h1>
+    
+		<textarea
+			id="codeInput"
+			rows="8"
+			class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+			placeholder="Write your JS BST code here, e.g.
+let bst = new BST();
+bst.insert(10);
+bst.insert(5);
+bst.insert(15);
+bst.delete(5);
+bst.search(15);
+bst.height();
+bst.sum();
+bst.lca(5,15);
+bst.inorder();
+bst.preorder();
+bst.postorder();"
+		></textarea>
+    
+		<button
+			id="runBtn"
+			class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition self-start flex items-center gap-2 font-medium shadow-lg hover:shadow-indigo-500/20 active:scale-95"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+				<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l3-2z" clip-rule="evenodd" />
+			</svg>
+			Run & Visualize
+		</button>
+
+		<div class="flex gap-6 mt-2">
+			<!-- Code Execution Highlight -->
+			<section class="w-1/2 bg-gray-800 p-4 rounded-lg border border-gray-700 font-mono text-base whitespace-pre-wrap overflow-auto h-[500px] flex flex-col">
+				<div class="flex items-center">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+					</svg>
+					<span class="ml-1 text-indigo-300 font-medium">Code Execution</span>
+				</div>
+				<div id="codeExecution" class="flex-grow overflow-auto mt-1"></div>
+			</section>
+
+			<!-- Tree Visualization -->
+			<div class="w-1/2 flex flex-col">
+				<div class="box-heading">
+					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+					</svg>
+					Tree Visualization
+				</div>
+				<section id="treeContainer">
+					<div id="stackContainer" class="w-full flex justify-center overflow-auto"></div>
+					<div id="treeOutput" class="mt-6 w-full min-h-[48px] text-center"></div>
+					<div id="treeTraversal" class="mt-2 w-full min-h-[32px] text-center"></div>
+				</section>
+			</div>
+		</div>
+
+		<!-- Output Console Section -->
+		<section>
+			<div class="box-heading">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+				</svg>
+				Output Console
+			</div>
+			<div id="outputConsole" tabindex="0"></div>
+		</section>
+	</main>
+
+	<script>
+		// BST and Node classes
+		class Node {
+			constructor(val) {
+				this.val = val;
+				this.left = null;
+				this.right = null;
+			}
+		}
+
+		class BST {
+			constructor() {
+				this.root = null;
+			}
+
+			insert(val) {
+				this.root = this._insert(this.root, val);
+			}
+			_insert(node, val) {
+				if (!node) return new Node(val);
+				if (val < node.val) node.left = this._insert(node.left, val);
+				else if (val > node.val) node.right = this._insert(node.right, val);
+				return node;
+			}
+
+			delete(val) {
+				this.root = this._delete(this.root, val);
+			}
+			_delete(node, val) {
+				if (!node) return null;
+				if (val < node.val) {
+					node.left = this._delete(node.left, val);
+				} else if (val > node.val) {
+					node.right = this._delete(node.right, val);
+				} else {
+					if (!node.left && !node.right) {
+						return null;
+					} else if (!node.left) {
+						return node.right;
+					} else if (!node.right) {
+						return node.left;
+					} else {
+						let succParent = node;
+						let succ = node.right;
+						while (succ.left) {
+							succParent = succ;
+							succ = succ.left;
+						}
+						node.val = succ.val;
+						if (succParent !== node) {
+							succParent.left = this._delete(succParent.left, succ.val);
+						} else {
+							succParent.right = this._delete(succParent.right, succ.val);
+						}
+					}
+				}
+				return node;
+			}
+
+			search(val, callback) {
+				return this._search(this.root, val, callback);
+			}
+			_search(node, val, callback) {
+				if (!node) return null;
+				if (callback) callback(node);
+				if (node.val === val) return node;
+				else if (val < node.val) return this._search(node.left, val, callback);
+				else return this._search(node.right, val, callback);
+			}
+
+			height() {
+				function getHeight(node) {
+					if (!node) return 0;
+					return 1 + Math.max(getHeight(node.left), getHeight(node.right));
+				}
+				return getHeight(this.root);
+			}
+
+			sum() {
+				function getSum(node) {
+					if (!node) return 0;
+					return node.val + getSum(node.left) + getSum(node.right);
+				}
+				return getSum(this.root);
+			}
+
+			lca(n1, n2) {
+				function findLCA(node, n1, n2) {
+					if (!node) return null;
+					if (node.val > n1 && node.val > n2) return findLCA(node.left, n1, n2);
+					if (node.val < n1 && node.val < n2) return findLCA(node.right, n1, n2);
+					return node;
+				}
+				return findLCA(this.root, n1, n2);
+			}
+
+			inorder(callback) {
+				const result = [];
+				function traverse(node) {
+					if (!node) return;
+					traverse(node.left);
+					result.push(node.val);
+					if (callback) callback(node);
+					traverse(node.right);
+				}
+				traverse(this.root);
+				return result;
+			}
+			preorder(callback) {
+				const result = [];
+				function traverse(node) {
+					if (!node) return;
+					result.push(node.val);
+					if (callback) callback(node);
+					traverse(node.left);
+					traverse(node.right);
+				}
+				traverse(this.root);
+				return result;
+			}
+			postorder(callback) {
+				const result = [];
+				function traverse(node) {
+					if (!node) return;
+					traverse(node.left);
+					traverse(node.right);
+					result.push(node.val);
+					if (callback) callback(node);
+				}
+				traverse(this.root);
+				return result;
+			}
+		}
+
+		function appendOutput(text) {
+			const outputConsole = document.getElementById("outputConsole");
+			outputConsole.textContent += text + "\n";
+			outputConsole.scrollTop = outputConsole.scrollHeight;
+		}
+
+		const runBtn = document.getElementById("runBtn");
+		const codeInput = document.getElementById("codeInput");
+		const codeExecution = document.getElementById("codeExecution");
+		const treeContainer = document.getElementById("stackContainer");
+
+		function renderTree(node, depth = 0) {
+			if (!node) return null;
+			const nodeDiv = document.createElement("div");
+			nodeDiv.classList.add("tree-node");
+			nodeDiv.style.marginTop = depth === 0 ? "0" : "24px";
+      
+			const box = document.createElement("div");
+			box.classList.add("node-box");
+			box.textContent = node.val;
+			nodeDiv.appendChild(box);
+      
+			if (node.left || node.right) {
+				const childrenDiv = document.createElement("div");
+				childrenDiv.classList.add("node-children");
+				childrenDiv.style.gap = "60px";
+				childrenDiv.style.marginTop = "30px";
+        
+				if (node.left) {
+					const leftChild = renderTree(node.left, depth + 1);
+					childrenDiv.appendChild(leftChild);
+				} else {
+					const empty = document.createElement("div");
+					empty.style.minWidth = "70px";
+					childrenDiv.appendChild(empty);
+				}
+        
+				if (node.right) {
+					const rightChild = renderTree(node.right, depth + 1);
+					childrenDiv.appendChild(rightChild);
+				} else {
+					const empty = document.createElement("div");
+					empty.style.minWidth = "70px";
+					childrenDiv.appendChild(empty);
+				}
+        
+				nodeDiv.appendChild(childrenDiv);
+			}
+			return nodeDiv;
+		}
+
+		function highlightNodeByValue(rootDiv, val, className = "visited") {
+			if (!rootDiv) return null;
+			if (rootDiv.querySelector(".node-box")?.textContent == val.toString()) {
+				rootDiv.querySelector(".node-box").classList.add(className);
+				return rootDiv.querySelector(".node-box");
+			}
+			for (const child of rootDiv.querySelector(".node-children")?.children || []) {
+				const found = highlightNodeByValue(child, val, className);
+				if (found) return found;
+			}
+			return null;
+		}
+
+		function clearAllHighlights(rootDiv) {
+			if (!rootDiv) return;
+			const boxes = rootDiv.querySelectorAll(".node-box");
+			boxes.forEach(b => {
+				b.classList.remove("visited", "found", "lca");
+			});
+		}
+
+		function printTreeOutput(msg) {
+			document.getElementById("treeOutput").textContent = msg;
+			appendOutput(msg);
+		}
+
+		async function highlightTraversal(bst, traversalFn, traversalName) {
+			clearAllHighlights(treeContainer.firstChild);
+			const visitedNodes = [];
+			function callback(node) {
+				visitedNodes.push(node.val);
+			}
+			const traversalArr = traversalFn.call(bst, callback);
+			let traversalStr = "";
+			for (const val of traversalArr) {
+				clearAllHighlights(treeContainer.firstChild);
+				highlightNodeByValue(treeContainer.firstChild, val, "visited");
+				traversalStr += (traversalStr ? " → " : "") + val;
+				document.getElementById("treeTraversal").textContent = `${traversalName}: ${traversalStr}`;
+				await new Promise(r => setTimeout(r, 900));
+			}
+			clearAllHighlights(treeContainer.firstChild);
+			document.getElementById("treeTraversal").textContent = `${traversalName}: ${traversalStr}`;
+		}
+
+		async function highlightSearch(bst, val) {
+			clearAllHighlights(treeContainer.firstChild);
+			const foundNodes = [];
+			const result = bst.search(val, node => {
+				foundNodes.push(node.val);
+			});
+			for (const v of foundNodes) {
+				clearAllHighlights(treeContainer.firstChild);
+				highlightNodeByValue(treeContainer.firstChild, v, "visited");
+				printTreeOutput(`Searching for ${val}... at node ${v}`);
+				await new Promise(r => setTimeout(r, 700));
+			}
+			clearAllHighlights(treeContainer.firstChild);
+			if (result) {
+				highlightNodeByValue(treeContainer.firstChild, val, "found");
+				printTreeOutput(`Node ${val} found in the BST.`);
+			} else {
+				printTreeOutput(`Node ${val} NOT found in the BST.`);
+			}
+		}
+
+		function highlightLCA(bst, n1, n2) {
+			clearAllHighlights(treeContainer.firstChild);
+			const lcaNode = bst.lca(n1, n2);
+			if (!lcaNode) {
+				printTreeOutput(`LCA of ${n1} and ${n2} not found.`);
+			} else {
+				highlightNodeByValue(treeContainer.firstChild, lcaNode.val, "lca");
+				printTreeOutput(`LCA of ${n1} and ${n2} is ${lcaNode.val}`);
+			}
+		}
+
+		function printHeight(bst) {
+			const h = bst.height();
+			printTreeOutput(`Height of BST: ${h}`);
+		}
+    
+		function printSum(bst) {
+			const s = bst.sum();
+			printTreeOutput(`Sum of all nodes: ${s}`);
+		}
+
+		runBtn.addEventListener("click", async () => {
+			const code = codeInput.value.trim();
+			if (!code) return alert("Please enter some code");
+
+			const lines = code.split("\n").map(line => line.trim()).filter(l => l !== "");
+			codeExecution.innerHTML = "";
+			treeContainer.innerHTML = "";
+			document.getElementById("treeOutput").textContent = "";
+			document.getElementById("treeTraversal").textContent = "";
+
+			codeExecution.innerHTML = lines
+				.map((line, i) => `<div id="line-${i}" class="code-line">${line}</div>`)
+				.join("");
+
+			const highlightLine = (index) => {
+				lines.forEach((_, i) => {
+					const lineDiv = document.getElementById(`line-${i}`);
+					if (lineDiv) {
+						if (i === index) {
+							lineDiv.classList.add("highlight");
+							lineDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+						} else {
+							lineDiv.classList.remove("highlight");
+						}
+					}
+				});
+			};
+
+			let bst = new BST();
+
+			for (let i = 0; i < lines.length; i++) {
+				highlightLine(i);
+				const line = lines[i];
+
+				if (/let\s+bst\s*=\s*new\s*BST\(\);?/.test(line)) {
+					bst = new BST();
+					treeContainer.innerHTML = "";
+					document.getElementById("treeOutput").textContent = "";
+					document.getElementById("treeTraversal").textContent = "";
+					continue;
+				}
+				let m;
+				if ((m = line.match(/bst\.insert\((\d+)\);?/))) {
+					bst.insert(parseInt(m[1]));
+					treeContainer.innerHTML = "";
+					const treeDOM = renderTree(bst.root);
+					treeContainer.appendChild(treeDOM);
+					printTreeOutput(`Inserted ${m[1]} into BST.`);
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if ((m = line.match(/bst\.delete\((\d+)\);?/))) {
+					bst.delete(parseInt(m[1]));
+					treeContainer.innerHTML = "";
+					const treeDOM = renderTree(bst.root);
+					treeContainer.appendChild(treeDOM);
+					printTreeOutput(`Deleted ${m[1]} from BST.`);
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if ((m = line.match(/bst\.search\((\d+)\);?/))) {
+					treeContainer.innerHTML = "";
+					const treeDOM = renderTree(bst.root);
+					treeContainer.appendChild(treeDOM);
+					await highlightSearch(bst, parseInt(m[1]));
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if (/bst\.height\(\);?/.test(line)) {
+					printHeight(bst);
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if (/bst\.sum\(\);?/.test(line)) {
+					printSum(bst);
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if ((m = line.match(/bst\.lca\((\d+),\s*(\d+)\);?/))) {
+					highlightLCA(bst, parseInt(m[1]), parseInt(m[2]));
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if (/bst\.inorder\(\);?/.test(line)) {
+					const treeDOM = renderTree(bst.root);
+					treeContainer.innerHTML = "";
+					treeContainer.appendChild(treeDOM);
+					await highlightTraversal(bst, bst.inorder, "Inorder");
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if (/bst\.preorder\(\);?/.test(line)) {
+					const treeDOM = renderTree(bst.root);
+					treeContainer.innerHTML = "";
+					treeContainer.appendChild(treeDOM);
+					await highlightTraversal(bst, bst.preorder, "Preorder");
+					await new Promise(r => setTimeout(r, 1000));
+				}
+				else if (/bst\.postorder\(\);?/.test(line)) {
+					const treeDOM = renderTree(bst.root);
+					treeContainer.innerHTML = "";
+					treeContainer.appendChild(treeDOM);
+					await highlightTraversal(bst, bst.postorder, "Postorder");
+					await new Promise(r => setTimeout(r, 1000));
+				}
+			}
+			highlightLine(-1);
+		});
+	</script>
+</body>
+</html>
+

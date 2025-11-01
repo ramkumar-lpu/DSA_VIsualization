@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Graph</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shrink {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    #codeExecution {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #codeExecution::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 3px;
+    }
+    .code-line {
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin: 2px 0;
+    }
+    .code-line.highlight {
+      background-color: rgba(234, 179, 8, 0.15);
+      border-left: 3px solid #eab308;
+    }
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+    }
+    .box-heading {
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #outputConsole {
+      background: #1f2937;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      margin-top: 12px;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    #graphContainer {
+      min-height: 260px;
+      height: 260px;
+      background: #1f2937;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+    #adjContainer {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    #adjList, #adjMatrix {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 185px;
+      height: 185px;
+      flex: 1;
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      text-align: center;
+    }
+    th, td {
+      border: 1px solid #4b5563;
+      padding: 6px;
+      color: #e5e7eb;
+    }
+    th {
+      background-color: #4f46e5;
+      color: white;
+      user-select: none;
+    }
+    pre {
+      color: #e5e7eb;
+      font-family: 'Fira Code', monospace;
+      white-space: pre-wrap;
+    }
+    .node circle {
+      fill: #4f46e5;
+      stroke: #6366f1;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .node text {
+      fill: white;
+      font-weight: 600;
+      pointer-events: none;
+      user-select: none;
+    }
+    .node.visited circle {
+      fill: #10b981;
+      stroke: #34d399;
+    }
+    .link {
+      stroke: #6366f1;
+      stroke-width: 2px;
+      marker-end: url(#arrowhead);
+      transition: all 0.2s ease;
+    }
+    .link.undirected {
+      marker-end: none;
+    }
+    .link.visited {
+      stroke: #f59e0b;
+      stroke-width: 3px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+    <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      DSA Visualizer
+    </h2>
+    <ul class="flex flex-col gap-3">
+      <li>
+        <a href="idx.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          Array
+        </a>
+      </li>
+      <li>
+        <a href="linked.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Linked List
+        </a>
+      </li>
+      <li>
+        <a href="stack.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+          </svg>
+          Stack
+        </a>
+      </li>
+      <li>
+        <a href="queue.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+          Queue
+        </a>
+      </li>
+      <li>
+        <a href="tree.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+          Tree
+        </a>
+      </li>
+      <li>
+        <a href="graph.html" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-indigo-900/30 text-indigo-300 font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          Graph
+        </a>
+      </li>
+      <li>
+        <a href="heap.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Heap
+        </a>
+      </li>
+      <li>
+        <a href="hashing.html" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-700/50 text-gray-300 hover:text-white font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          Hashing
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 max-w-7xl mx-auto flex flex-col gap-4">
+    <h1 class="text-3xl font-bold text-indigo-300 flex items-center gap-2 mt-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+      Graph Visualizer
+    </h1>
+    
+    
+*** End Of File

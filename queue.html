@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Queue & Deque & Priority Queue</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shrink {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    #codeExecution {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #codeExecution::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    #codeExecution::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 3px;
+    }
+    .code-line {
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      margin: 2px 0;
+    }
+    .code-line.highlight {
+      background-color: rgba(234, 179, 8, 0.15);
+      border-left: 3px solid #eab308;
+    }
+    #peekInfo {
+  width: 100%;
+  text-align: center;
+}
+    textarea {
+      scrollbar-width: thin;
+      scrollbar-color: #4b5563 #1f2937;
+    }
+    textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+    }
+    .box-heading {
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #a5b4fc;
+      margin-bottom: 10px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #outputConsole {
+      background: #1f2937;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      min-height: 80px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      margin-top: 12px;
+      color: #e5e7eb;
+      line-height: 1.5;
+    }
+    .queue-box, .pq-box {
+      min-height: 280px;
+      height: 280px;
+      background: #1f2937;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      overflow: auto;
+    }
+    .queue-visual, .pq-visual {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 60px;
+      margin: 0 auto;
+      margin-top: 12px;
+      flex-wrap: wrap;
+      max-width: 100%;
+    }
+    .queue-node, .pq-node {
+      width: 60px;
+      height: 42px;
+      background: #4f46e5;
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 15px;
+      position: relative;
+      transition: all 0.2s ease;
+      border: 1px solid #6366f1;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+      flex-shrink: 0;
+    }
+    .queue-node.added, .pq-node.added {
+      background: #10b981;
+      border-color: #34d399;
+      animation: pulse 0.8s ease-out;
+    }
+    .queue-node.removed, .pq-node.removed {
+      background: #ef4444;
+      border-color: #f87171;
+      animation: shrink 0.6s ease-out forwards;
+    }
+    .pq-priority {
+      font-size: 12px;
+      color: #f59e42;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <nav class="w-64 bg-gray-800 text-white p-6 flex flex-col border-r border-gray-700">
+    <h2 class="text-2xl font-bold mb-8 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+      DSA Visualizer
+    </h2>
+*** End Of File
