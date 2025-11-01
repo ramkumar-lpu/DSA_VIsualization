@@ -1,25 +1,14 @@
-<!DOCTYPE html><!doctype html>
-
-<html lang="en"><html>
-
-<head>  <head>
-
-  <meta charset="UTF-8" />    <meta charset="utf-8" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1" />    <meta http-equiv="refresh" content="0; URL='DSA%20copy/queue.html'">
-
-  <title>DSA Visualizer - Get Started</title>    <title>Redirecting…</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>  </head>
-
-  <style>  <body>
-
-    html, body {    <p>Redirecting to the visualizer — <a href="DSA%20copy/landing.html">click here</a>.</p>
-
-      height: 100%;  </body>
-
-      min-height: 100vh;</html>
-
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSA Visualizer - Get Started</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body {
+      height: 100%;
+      min-height: 100vh;
       margin: 0;
       padding: 0;
       width: 100vw;
@@ -33,7 +22,6 @@
       min-height: 100vh;
       width: 100vw;
       position: relative;
-      /* Remove overflow: hidden here */
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -200,7 +188,7 @@
   <div class="blob blob2"></div>
   <div class="blob blob3"></div>
 
-n  <div class="flex flex-col items-center max-w-2xl text-center w-full z-10 mx-auto" style="position:relative; margin-top:3vh;">
+  <div class="flex flex-col items-center max-w-2xl text-center w-full z-10 mx-auto" style="position:relative; margin-top:3vh;">
     <h1 class="text-5xl font-extrabold brand-glow mb-4 mt-20 drop-shadow">Welcome to the DSA Visualizer</h1>
     <p class="text-gray-100 mb-8  max-w-lg text-lg font-medium drop-shadow">
       Explore interactive, animated visualizations of popular data structures and algorithms.<br>
@@ -244,20 +232,20 @@ n  <div class="flex flex-col items-center max-w-2xl text-center w-full z-10 mx-a
     </div>
   </div>
 
-n<script>
+<script>
   const getStartedBtn = document.getElementById("getStartedBtn");
   const visualizerList = document.getElementById("visualizerList");
 
-n  getStartedBtn.addEventListener("click", () => {
+  getStartedBtn.addEventListener("click", () => {
     getStartedBtn.style.display = "none";
     visualizerList.style.display = "flex";
     visualizerList.style.animation = "fadeIn 0.8s";
   });
 
-n  function navigateTo(page) {
+  function navigateTo(page) {
     window.location.href = page;
   }
 </script>
 
-n</body>
+</body>
 </html>
